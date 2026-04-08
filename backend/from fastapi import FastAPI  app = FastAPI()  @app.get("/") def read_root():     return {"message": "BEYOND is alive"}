@@ -1,0 +1,12 @@
+beyond-core/
+│
+├── README.md
+├── backend/
+│   ├── main.py
+│   ├── requirements.txt
+│
+├── frontend/
+│   ├── index.html
+│
+├── docs/
+│   ├── whitepaper.md
