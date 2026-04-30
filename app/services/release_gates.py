@@ -17,6 +17,7 @@ persist_gate_decisions(db, request_id, gate_result, *, evaluated_by_user_id) -> 
     the ``release_gate_decisions`` table.
 """
 
+import functools
 import json
 from datetime import datetime, timezone
 
@@ -135,11 +136,23 @@ def evaluate_release_gates(
     results: dict[str, dict] = {}
     all_passed = True
 
-    for gate_name, gate_fn in _GATES:
-        if gate_name == "request_exists":
-            outcome = gate_fn(db, request_id, preloaded_request)
-        else:
-            outcome = gate_fn(db, request_id)
+    # Build the gate list, binding the preloaded row into _gate_request_exists
+    # via functools.partial so every gate can be called with a uniform signature.
+    gates = list(_GATES)
+    if preloaded_request is not None:
+        gates = [
+            (
+                "request_exists",
+                functools.partial(
+                    _gate_request_exists,
+                    preloaded_request=preloaded_request,
+                ),
+            ),
+            *gates[1:],
+        ]
+
+    for gate_name, gate_fn in gates:
+        outcome = gate_fn(db, request_id)
         results[gate_name] = outcome
         if not outcome["passed"]:
             all_passed = False
