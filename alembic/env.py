@@ -14,10 +14,7 @@ if config.config_file_name is not None:
 
 config.set_main_option(
     "sqlalchemy.url",
-    os.getenv(
-        "DATABASE_URL",
-        "postgresql+psycopg2://beyond_user:beyond_password@localhost:5432/beyond",
-    ),
+    os.getenv("DATABASE_URL", "sqlite:///./beyond.db"),
 )
 
 target_metadata = Base.metadata
