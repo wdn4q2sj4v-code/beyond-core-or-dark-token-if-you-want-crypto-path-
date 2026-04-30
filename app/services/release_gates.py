@@ -18,7 +18,7 @@ persist_gate_decisions(db, request_id, gate_result, *, evaluated_by_user_id) -> 
 """
 
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 
 from sqlalchemy.orm import Session
 
@@ -152,7 +152,7 @@ def persist_gate_decisions(
         evaluated_by_user_id: Primary key of the user who triggered the release
             attempt.
     """
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     for gate_name, outcome in gate_result.get("gates", {}).items():
         row = ReleaseGateDecision(
             approval_request_id=request_id,

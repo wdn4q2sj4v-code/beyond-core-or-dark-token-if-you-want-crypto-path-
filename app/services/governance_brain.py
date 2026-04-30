@@ -29,7 +29,7 @@ create_governance_brain_decision(db, *, approval_request_id, user_id) -> Governa
 """
 
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 
 from sqlalchemy.orm import Session
 
@@ -47,7 +47,7 @@ def _signal_approval_age_days(row: NotificationRuleApprovalRequest) -> dict:
     Requests approved very recently (< 1 hour) receive a slight risk signal
     to encourage a cooling-off period.
     """
-    age_seconds = (datetime.utcnow() - row.updated_at).total_seconds()
+    age_seconds = (datetime.now(timezone.utc) - row.updated_at.replace(tzinfo=timezone.utc)).total_seconds()
     age_hours = age_seconds / 3600
     if age_hours < 1:
         return {
@@ -161,7 +161,7 @@ def create_governance_brain_decision(
         governance_score=governance_score,
         reasons_json=json.dumps(reasons),
         signals_json=json.dumps(signals),
-        created_at=datetime.utcnow(),
+        created_at=datetime.now(timezone.utc),
     )
     db.add(record)
     db.commit()

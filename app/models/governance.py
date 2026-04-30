@@ -2,7 +2,7 @@
 SQLAlchemy models for governance brain decisions and release gate decisions.
 """
 
-from datetime import datetime
+from datetime import datetime, timezone
 
 from sqlalchemy import Column, Integer, String, Float, DateTime, Text, ForeignKey
 
@@ -32,7 +32,7 @@ class GovernanceBrainDecision(Base):
     governance_score = Column(Float, nullable=False, default=0.0)
     reasons_json = Column(Text, nullable=True)
     signals_json = Column(Text, nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
 
     def __repr__(self) -> str:  # pragma: no cover
         return (
@@ -62,7 +62,7 @@ class ReleaseGateDecision(Base):
     passed = Column(Integer, nullable=False)  # 1 = passed, 0 = failed
     details_json = Column(Text, nullable=True)
     evaluated_by_user_id = Column(Integer, nullable=False)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
 
     def __repr__(self) -> str:  # pragma: no cover
         return (
