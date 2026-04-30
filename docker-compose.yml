@@ -1,0 +1,20 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: beyond_postgres
+    environment:
+      POSTGRES_DB: beyond
+      POSTGRES_USER: beyond_user
+      POSTGRES_PASSWORD: beyond_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - beyond_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U beyond_user -d beyond"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  beyond_pgdata:
