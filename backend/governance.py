@@ -72,7 +72,7 @@ class UseForReleaseRequest(BaseModel):
 
 
 # ---------------------------------------------------------------------------
-# In-memory store
+# In-memory store (for demonstration only; replace with persistent storage in production)
 # ---------------------------------------------------------------------------
 
 _store: Dict[str, GovernanceOverrideRecord] = {}
