@@ -92,9 +92,11 @@ def approve_override_request(request_id: str, body: ApproveRequest):
     if not override:
         raise HTTPException(status_code=404, detail="Override request not found")
     if override.status == OverrideStatus.approved:
-        raise HTTPException(status_code=400, detail="Override request is already fully approved")
+        raise HTTPException(status_code=400, detail="Override request is already approved")
     if override.status == OverrideStatus.rejected:
         raise HTTPException(status_code=400, detail="Override request has been rejected and cannot be approved")
+    if body.approver == override.created_by:
+        raise HTTPException(status_code=400, detail="The request creator cannot approve their own override request")
     if override.first_approver is None:
         override.first_approver = body.approver
         override.status = OverrideStatus.partially_approved
