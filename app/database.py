@@ -9,7 +9,7 @@ from sqlalchemy.orm import declarative_base, sessionmaker
 
 DATABASE_URL = os.getenv(
     "DATABASE_URL",
-    "postgresql+psycopg2://beyond_user:beyond_password@localhost:5432/beyond",
+    "postgresql+psycopg2://localhost:5432/beyond",
 )
 
 engine = create_engine(DATABASE_URL)
