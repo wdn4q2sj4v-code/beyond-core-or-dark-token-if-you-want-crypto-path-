@@ -14,6 +14,7 @@ from models import ApprovalRequest
 # ---------------------------------------------------------------------------
 
 BANNED_ACTIONS: set[str] = {"nuke", "purge_all", "mass_delete"}
+SENSITIVE_KEYWORDS: set[str] = {"delete", "drop", "truncate", "override", "escalate"}
 
 
 def gate_banned_actions(req: ApprovalRequest) -> List[str]:
@@ -25,7 +26,7 @@ def gate_banned_actions(req: ApprovalRequest) -> List[str]:
 
 def gate_requester_identity(req: ApprovalRequest) -> List[str]:
     """Require a non-empty, non-anonymous requester identity."""
-    if not req.requester or req.requester.strip().lower() in ("", "anonymous", "unknown"):
+    if not req.requester or not req.requester.strip() or req.requester.strip().lower() in ("anonymous", "unknown"):
         return ["Requester identity must be verified (no anonymous requests)."]
     return []
 
@@ -39,8 +40,7 @@ def gate_payload_size(req: ApprovalRequest) -> List[str]:
 
 def gate_sensitive_keywords(req: ApprovalRequest) -> List[str]:
     """Flag actions containing sensitive keywords that need extra scrutiny."""
-    sensitive = {"delete", "drop", "truncate", "override", "escalate"}
-    hits = [kw for kw in sensitive if kw in req.action.lower()]
+    hits = [kw for kw in SENSITIVE_KEYWORDS if kw in req.action.lower()]
     if hits:
         return [f"Action contains sensitive keyword(s): {', '.join(hits)}."]
     return []
