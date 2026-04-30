@@ -20,6 +20,7 @@ raised, so that the audit trail is always up to date.
 
 from sqlalchemy.orm import Session
 
+from app.exceptions import ReleaseBlockedError
 from app.models.approval_request import NotificationRuleApprovalRequest
 from app.services.release_gates import evaluate_release_gates, persist_gate_decisions
 from app.services.governance_brain import create_governance_brain_decision
@@ -37,8 +38,8 @@ def release_approved_request(
     The function checks that the request exists and has ``status == "approved"``,
     then runs the release-gate and Governance Brain evaluations.  Both results
     are persisted regardless of outcome.  If any policy layer blocks the release
-    and *allow_override* is ``False`` a ``ValueError`` is raised with a
-    structured payload describing the blocking reason.
+    and *allow_override* is ``False`` a :exc:`~app.exceptions.ReleaseBlockedError`
+    is raised with a structured ``details`` payload describing the blocking reason.
 
     Args:
         db: Active SQLAlchemy session.
@@ -49,9 +50,9 @@ def release_approved_request(
             Brain decisions are logged but do not block the release.
 
     Raises:
-        ValueError: If the request is not found, not in ``approved`` state, or
-            blocked by policy gates / Governance Brain (when *allow_override* is
-            ``False``).
+        ValueError: If the request is not found or not in ``approved`` state.
+        ReleaseBlockedError: If blocked by policy gates or Governance Brain
+            (when *allow_override* is ``False``).
     """
     row = (
         db.query(NotificationRuleApprovalRequest)
@@ -65,15 +66,12 @@ def release_approved_request(
     if row.status != "approved":
         raise ValueError("Only approved requests can be released.")
 
-    gate_result = evaluate_release_gates(db, request_id)
+    # Pass the already-loaded row so _gate_request_exists skips a redundant query.
+    gate_result = evaluate_release_gates(db, request_id, preloaded_request=row)
     persist_gate_decisions(db, request_id, gate_result, evaluated_by_user_id=user_id)
 
-    if not gate_result["release_allowed"] and not allow_override:
-        raise ValueError({
-            "message": "Release blocked by policy gates.",
-            "gate_result": gate_result,
-        })
-
+    # Always run and persist the Governance Brain before raising, so the audit
+    # trail is complete regardless of which policy layer blocks the release.
     brain = create_governance_brain_decision(
         db,
         approval_request_id=request_id,
@@ -82,15 +80,23 @@ def release_approved_request(
 
     allowed_decisions = {"auto_promote", "approve_with_review"}
 
+    if not gate_result["release_allowed"] and not allow_override:
+        raise ReleaseBlockedError(
+            "Release blocked by policy gates.",
+            details={"gate_result": gate_result},
+        )
+
     if brain.decision not in allowed_decisions and not allow_override:
-        raise ValueError({
-            "message": "Release blocked by Governance Brain.",
-            "governance_decision": {
-                "decision": brain.decision,
-                "governance_score": brain.governance_score,
-                "reasons": brain.reasons_json,
-                "signals": brain.signals_json,
+        raise ReleaseBlockedError(
+            "Release blocked by Governance Brain.",
+            details={
+                "governance_decision": {
+                    "decision": brain.decision,
+                    "governance_score": brain.governance_score,
+                    "reasons": brain.reasons_json,
+                    "signals": brain.signals_json,
+                },
             },
-        })
+        )
 
     # existing release logic continues here

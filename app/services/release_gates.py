@@ -30,9 +30,13 @@ from app.models.governance import ReleaseGateDecision
 # Internal gate implementations
 # ---------------------------------------------------------------------------
 
-def _gate_request_exists(db: Session, request_id: int) -> dict:
+def _gate_request_exists(
+    db: Session,
+    request_id: int,
+    preloaded_request: "NotificationRuleApprovalRequest | None" = None,
+) -> dict:
     """Verify that the approval request row still exists and is in an approved state."""
-    row = (
+    row = preloaded_request or (
         db.query(NotificationRuleApprovalRequest)
         .filter(NotificationRuleApprovalRequest.id == request_id)
         .first()
@@ -102,13 +106,21 @@ _GATES = [
 # Public API
 # ---------------------------------------------------------------------------
 
-def evaluate_release_gates(db: Session, request_id: int) -> dict:
+def evaluate_release_gates(
+    db: Session,
+    request_id: int,
+    *,
+    preloaded_request: "NotificationRuleApprovalRequest | None" = None,
+) -> dict:
     """Run all release gates for *request_id* and return a summary.
 
     Args:
         db: Active SQLAlchemy session.
         request_id: Primary key of the ``NotificationRuleApprovalRequest`` to
             evaluate.
+        preloaded_request: Optional already-loaded model instance.  When
+            supplied it is passed to ``_gate_request_exists`` to avoid a
+            redundant DB round-trip.
 
     Returns:
         A dict with the following keys:
@@ -124,7 +136,10 @@ def evaluate_release_gates(db: Session, request_id: int) -> dict:
     all_passed = True
 
     for gate_name, gate_fn in _GATES:
-        outcome = gate_fn(db, request_id)
+        if gate_name == "request_exists":
+            outcome = gate_fn(db, request_id, preloaded_request)
+        else:
+            outcome = gate_fn(db, request_id)
         results[gate_name] = outcome
         if not outcome["passed"]:
             all_passed = False

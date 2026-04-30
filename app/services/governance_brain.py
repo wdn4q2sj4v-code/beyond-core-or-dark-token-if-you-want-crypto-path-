@@ -41,7 +41,7 @@ from app.models.approval_request import NotificationRuleApprovalRequest
 # Signal evaluators
 # ---------------------------------------------------------------------------
 
-def _signal_approval_age_days(row: NotificationRuleApprovalRequest) -> dict:
+def _signal_approval_age_hours(row: NotificationRuleApprovalRequest) -> dict:
     """Measure how long the request has been in approved state.
 
     Requests approved very recently (< 1 hour) receive a slight risk signal
@@ -147,7 +147,7 @@ def create_governance_brain_decision(
         )
 
     signals = [
-        _signal_approval_age_days(row),
+        _signal_approval_age_hours(row),
         _signal_requester_known(row),
     ]
 
