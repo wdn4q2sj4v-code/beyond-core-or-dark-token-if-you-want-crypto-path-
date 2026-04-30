@@ -9,7 +9,7 @@ POST /releases/{item_id}/publish
 """
 
 from fastapi import APIRouter
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import Any
 
 from errors import GovernanceBrainBlockError
@@ -25,7 +25,7 @@ class PublishRequest(BaseModel):
 
     reviewer_id: int | None = None
     approval_status: str = "pending"
-    metadata: dict[str, Any] = {}
+    metadata: dict[str, Any] = Field(default_factory=dict)
 
 
 class PublishResponse(BaseModel):
