@@ -157,7 +157,7 @@ def persist_gate_decisions(
         row = ReleaseGateDecision(
             approval_request_id=request_id,
             gate_name=gate_name,
-            passed=1 if outcome["passed"] else 0,
+            passed=outcome["passed"],
             details_json=json.dumps({"details": outcome.get("details")}),
             evaluated_by_user_id=evaluated_by_user_id,
             created_at=now,

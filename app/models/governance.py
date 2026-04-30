@@ -4,7 +4,7 @@ SQLAlchemy models for governance brain decisions and release gate decisions.
 
 from datetime import datetime, timezone
 
-from sqlalchemy import Column, Integer, String, Float, DateTime, Text, ForeignKey
+from sqlalchemy import Boolean, Column, Integer, String, Float, DateTime, Text, ForeignKey
 
 from app.database import Base
 
@@ -59,7 +59,7 @@ class ReleaseGateDecision(Base):
         index=True,
     )
     gate_name = Column(String, nullable=False)
-    passed = Column(Integer, nullable=False)  # 1 = passed, 0 = failed
+    passed = Column(Boolean, nullable=False)
     details_json = Column(Text, nullable=True)
     evaluated_by_user_id = Column(Integer, nullable=False)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
