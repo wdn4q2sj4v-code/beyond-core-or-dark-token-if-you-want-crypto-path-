@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+*.egg-info/
+dist/
+build/
+
+# SQLite (legacy — replaced by PostgreSQL)
+*.db
+*.sqlite
+*.sqlite3
+
+# Environment secrets
+.env
+
+# IDE
+.idea/
+.vscode/
+*.swp
