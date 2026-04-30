@@ -46,6 +46,11 @@ _SIGNAL_WEIGHTS: dict[str, float] = {
 }
 
 
+def _is_nonempty_string(value: object) -> bool:
+    """Return ``True`` when *value* is a non-empty string after stripping whitespace."""
+    return isinstance(value, str) and bool(value.strip())
+
+
 @dataclass
 class GovernanceBrain:
     """Encapsulates the result of a release-gate governance evaluation.
@@ -93,12 +98,8 @@ class GovernanceBrain:
         brain = cls()
 
         # --- signal evaluation ------------------------------------------------
-        brain.signals["rule_name_provided"] = bool(
-            approval_request.rule_name and approval_request.rule_name.strip()
-        )
-        brain.signals["description_provided"] = bool(
-            approval_request.description and approval_request.description.strip()
-        )
+        brain.signals["rule_name_provided"] = _is_nonempty_string(approval_request.rule_name)
+        brain.signals["description_provided"] = _is_nonempty_string(approval_request.description)
         brain.signals["has_requester"] = approval_request.requester_id is not None
         brain.signals["status_pending"] = approval_request.status == "pending"
         brain.signals["requester_role_member"] = (

@@ -9,7 +9,7 @@ Defines:
   Governance Brain release-gate evaluations.
 """
 
-from datetime import datetime
+from datetime import datetime, timezone
 
 from sqlalchemy import Column, DateTime, ForeignKey, Integer, JSON, String, Float
 from sqlalchemy.orm import relationship
@@ -26,7 +26,7 @@ class User(Base):
     username = Column(String, unique=True, nullable=False, index=True)
     email = Column(String, unique=True, nullable=True)
     role = Column(String, default="member", nullable=False)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
 
     audit_logs = relationship("AuditLog", back_populates="actor", lazy="dynamic")
 
@@ -44,11 +44,11 @@ class NotificationRuleApprovalRequest(Base):
     description = Column(String, nullable=True)
     requester_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     status = Column(String, default="pending", nullable=False)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
     updated_at = Column(
         DateTime,
-        default=datetime.utcnow,
-        onupdate=datetime.utcnow,
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
         nullable=False,
     )
 
@@ -82,7 +82,7 @@ class AuditLog(Base):
     after = Column(JSON, nullable=True)
     ip_address = Column(String, nullable=True)
     user_agent = Column(String, nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False, index=True)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False, index=True)
 
     actor = relationship("User", back_populates="audit_logs")
 

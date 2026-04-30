@@ -202,8 +202,8 @@ def evaluate_release_gate(
         after={
             "decision": brain.decision,
             "governance_score": brain.governance_score,
-            "signals": brain.signals_json,
-            "reasons": brain.reasons_json,
+            "signals": brain.signals,
+            "reasons": brain.reasons,
         },
         request=request,
     )
